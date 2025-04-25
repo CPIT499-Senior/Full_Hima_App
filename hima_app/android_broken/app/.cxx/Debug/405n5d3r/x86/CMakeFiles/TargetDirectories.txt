@@ -1,0 +1,2 @@
+/Users/lamathabitu/Downloads/hima_app/android/app/.cxx/Debug/405n5d3r/x86/CMakeFiles/edit_cache.dir
+/Users/lamathabitu/Downloads/hima_app/android/app/.cxx/Debug/405n5d3r/x86/CMakeFiles/rebuild_cache.dir
