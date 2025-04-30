@@ -1,4 +1,5 @@
 # test_detect_landmine.py
+#python -m unittest test_detect_landmine
 
 import unittest  # Python's built-in testing framework
 from detect_landmine import detect_landmines_in_image  # Your function under test
