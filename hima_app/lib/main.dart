@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'screens/welcome_screen.dart';
-import 'screens/login_screen.dart'; // Import the login screen
+import 'screens/login_screen.dart';
 import 'screens/PreviousMissions.dart';
 import 'screens/MissionDetails.dart';
 import 'package:hima_app/screens/HimaMapPicker.dart';
@@ -17,7 +17,7 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Hima App',
-      initialRoute: '/', // Define the first screen
+      initialRoute: '/', // Start screen
       routes: {
         '/': (context) => WelcomeScreen(),
         '/login': (context) => LoginScreen(),
@@ -25,6 +25,10 @@ class MyApp extends StatelessWidget {
         '/previous_missions': (context) {
           final username = ModalRoute.of(context)!.settings.arguments as String;
           return PreviousMissions(username: username);
+        },
+        '/mission-details': (context) {
+          final args = ModalRoute.of(context)!.settings.arguments as Map;
+          return MissionDetails(missionName: args['missionName']);
         },
       },
     );

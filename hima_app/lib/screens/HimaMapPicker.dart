@@ -64,7 +64,6 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
           _saveMission();
         }
       } else if (_regionCorners.length == 2) {
-        // Only show the warning if region is defined but user tapped outside it
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('🚫 Tap inside the selected region only')),
         );
@@ -130,27 +129,20 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
       final file = File('${directory.path}/mission.json');
       await file.writeAsString(jsonEncode(mission));
 
-      //Send to Flask
       await sendMissionToFlask(mission);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('✅ Mission saved and sent to Flask')),
-      );
-
-      _showMissionPreview(mission);
     } catch (e) {
+      _hideLoadingDialog();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('❌ Failed to save mission')),
       );
     }
   }
 
-  // this to Send mission To flask
   Future<void> sendMissionToFlask(Map<String, dynamic> missionJson) async {
-    final url = Uri.parse('http://10.0.2.2:5000/run-mission'); // ✅ Fixed here
+    final url = Uri.parse('http://10.0.2.2:5000/run-mission');
 
     try {
-      print('📤 Sending new mission to Flask...');
+      _showLoadingDialog(); // Show loading
 
       final response = await http.post(
         url,
@@ -158,45 +150,47 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
         body: jsonEncode(missionJson),
       );
 
+      _hideLoadingDialog(); // Hide after getting response
+
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body);
         final missionName = data['mission'] ?? 'unknown';
-        print('✅ Flask response: ${response.body}');
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('✅ Mission "$missionName" successfully sent to Flask.')),
+        Navigator.of(context).pushReplacementNamed(
+          '/mission-details',
+          arguments: {'missionName': missionName},
         );
-
       } else {
-        print('❌ Flask response error. Status: ${response.statusCode}');
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('❌ Flask error: ${response.statusCode}')),
         );
       }
     } catch (e) {
-      print('❌ Exception sending mission: $e');
+      _hideLoadingDialog();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('❌ Error sending mission to Flask: $e')),
       );
     }
   }
 
-  void _showMissionPreview(Map<String, dynamic> mission) {
+  void _showLoadingDialog() {
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (_) => AlertDialog(
-        title: Text('📄 Mission Preview'),
-        content: SingleChildScrollView(
-          child: Text(JsonEncoder.withIndent('  ').convert(mission)),
+        content: Row(
+          children: [
+            CircularProgressIndicator(),
+            SizedBox(width: 16),
+            Text("Processing mission..."),
+          ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('OK'),
-          )
-        ],
       ),
     );
+  }
+
+  void _hideLoadingDialog() {
+    Navigator.of(context, rootNavigator: true).pop();
   }
 
   void _resetMission() {
@@ -259,7 +253,6 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
         return;
       }
 
-      // Show feedback and avoid UI freeze
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('📡 Getting current location...')),
       );
@@ -286,7 +279,6 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
           IconButton(
             icon: Icon(Icons.my_location),
             onPressed: () {
-              // Avoid main thread block by using post-frame callback
               WidgetsBinding.instance.addPostFrameCallback((_) {
                 _goToCurrentLocation();
               });
@@ -347,7 +339,6 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
             child: GoogleMap(
               onMapCreated: (controller) {
                 _mapController = controller;
-                print("✅ Map initialized!");
               },
               initialCameraPosition: CameraPosition(
                 target: LatLng(21.558, 39.206),
