@@ -20,9 +20,9 @@ class MissionDetails extends StatelessWidget {
       ),
       body: Stack(
         children: [
-          Positioned.fill(
-            child: Image.asset('assets/map.png', fit: BoxFit.cover),
-          ),
+           Positioned.fill(
+             child: Image.asset('assets/map.png', fit: BoxFit.cover),
+           ),
           Positioned(
             left: 20,
             bottom: 20,
