@@ -2,11 +2,11 @@ from flask import Flask, request, jsonify, send_from_directory
 import subprocess
 import json
 import os
-from generate_path import generate_safe_path  # ✅ Import the A* Python path generator
+from generate_path import generate_safe_path
 
 app = Flask(__name__)
 
-# 🛠 Utility: Auto-generate mission names
+#   Auto-generate mission names
 def get_next_mission_name():
     base_path = os.path.join('..', 'hima_app', 'missions')
     os.makedirs(base_path, exist_ok=True)
@@ -15,7 +15,7 @@ def get_next_mission_name():
     next_id = max(numbers, default=0) + 1
     return f"mission{next_id}"
 
-# 🚀 Run a new mission
+#  Run a new mission
 @app.route('/run-mission', methods=['POST'])
 def run_mission():
     matlab_path = "/Applications/MATLAB_R2024b.app/bin/matlab"
@@ -40,7 +40,7 @@ def run_mission():
     except FileNotFoundError:
         return jsonify({'status': 'error', 'reason': 'MATLAB not found'}), 500
 
-    # ✅ After MATLAB finishes, generate the safe path with Python
+    #  After MATLAB finishes, generate the safe path with Python
     try:
         generate_safe_path(mission_folder)
     except Exception as e:
@@ -60,7 +60,7 @@ def run_mission():
         'result': result
     }), 200
 
-# 📋 List all missions
+#  List all missions
 @app.route('/missions', methods=['GET'])
 def list_missions():
     base_path = os.path.join('..', 'hima_app', 'missions')
@@ -83,7 +83,7 @@ def list_missions():
 
     return jsonify(missions)
 
-# 🗂️ Serve result.json and other static files
+#  Serve result.json and other static files
 @app.route('/missions/<mission_id>/<filename>', methods=['GET'])
 def serve_mission_file(mission_id, filename):
     try:

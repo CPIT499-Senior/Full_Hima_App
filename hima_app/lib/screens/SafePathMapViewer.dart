@@ -24,7 +24,6 @@ class _SafePathMapViewerState extends State<SafePathMapViewer> {
   }
 
   Future<void> _loadMissionData() async {
-    // ✅ Use the fixed backend route for result.json
     final url = Uri.parse('http://10.0.2.2:5000/missions/${widget.missionName}/result.json');
     print('🛰️ Trying to load result for mission: ${widget.missionName}');
 

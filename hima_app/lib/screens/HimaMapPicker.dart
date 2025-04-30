@@ -64,7 +64,7 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
           _saveMission();
         }
       } else if (_regionCorners.length == 2) {
-        // ❗ Only show the warning if region is defined but user tapped outside it
+        // Only show the warning if region is defined but user tapped outside it
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('🚫 Tap inside the selected region only')),
         );
