@@ -94,8 +94,14 @@ function main(missionName)
         % Set mission folder path as an environment variable for Python
         setenv("HIMA_MISSION_FOLDER", missionFolder);
 
-        % Call YOLO script
-        py.runpy.run_path(fullfile(thisScriptDir, 'python', 'detect_landmine.py'));
+        % Run Python command to add the directory to sys.path
+        pythonPathCmd = sprintf("import sys; sys.path.insert(0, r'%s')", fullfile(thisScriptDir, 'python'));
+        pyrun(pythonPathCmd);
+    
+        % Import and run the detect_landmine module
+        py.importlib.import_module('detect_landmine');
+        py.detect_landmine.run();
+        
     catch ME
         error("❌ YOLO detection failed: " + ME.message);
     end
