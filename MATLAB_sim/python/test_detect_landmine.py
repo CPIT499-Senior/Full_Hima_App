@@ -2,7 +2,7 @@
 #python -m unittest test_detect_landmine
 
 import unittest  # Python's built-in testing framework
-from detect_landmine import detect_landmines_in_image  # Your function under test
+from detect_landmine import detect_landmines_in_image  
 from ultralytics import YOLO  # YOLOv8 model
 
 class TestYOLOLandmineDetection(unittest.TestCase):

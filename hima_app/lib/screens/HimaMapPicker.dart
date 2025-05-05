@@ -24,9 +24,11 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
   TextEditingController _searchController = TextEditingController();
   bool _isSelectingRegion = false;
 
+  // Handles tap events on the map to select region, start, and end points
   void _onMapTap(LatLng latLng) {
     setState(() {
       if (_isSelectingRegion && _regionCorners.length < 2) {
+        // Add corners to define the mission region
         _regionCorners.add(latLng);
         _markers.add(Marker(
           markerId: MarkerId('corner${_regionCorners.length}'),
@@ -36,20 +38,26 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
           ),
         ));
 
+        // Once two corners are selected, draw region and prompt for start/end points
         if (_regionCorners.length == 2) {
           _drawRegion();
           _isSelectingRegion = false;
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("✅ Region selected — now tap start and end points inside.")),
+            SnackBar(
+                content: Text(
+                    "✅ Region selected — now tap start and end points inside.")),
           );
         }
-      } else if (_regionCorners.length == 2 && _isWithinSelectedRegion(latLng)) {
+      } else if (_regionCorners.length == 2 &&
+          _isWithinSelectedRegion(latLng)) {
+        // Add start and end points inside the region
         if (_startPoint == null) {
           _startPoint = latLng;
           _markers.add(Marker(
             markerId: MarkerId('start'),
             position: latLng,
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+            icon: BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueGreen),
             infoWindow: InfoWindow(title: 'Start'),
           ));
         } else if (_endPoint == null) {
@@ -57,13 +65,15 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
           _markers.add(Marker(
             markerId: MarkerId('end'),
             position: latLng,
-            icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+            icon:
+                BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
             infoWindow: InfoWindow(title: 'End'),
           ));
 
           _saveMission();
         }
       } else if (_regionCorners.length == 2) {
+        // Warn if tapping outside the region
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('🚫 Tap inside the selected region only')),
         );
@@ -71,6 +81,7 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
     });
   }
 
+  // Draws a rectangular polygon to mark the selected region on the map
   void _drawRegion() {
     if (_regionCorners.length == 2) {
       LatLng topLeft = _regionCorners[0];
@@ -93,6 +104,7 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
     }
   }
 
+  // Checks if a point is inside the selected region rectangle
   bool _isWithinSelectedRegion(LatLng point) {
     if (_regionCorners.length < 2) return false;
 
@@ -112,23 +124,30 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
         point.longitude <= maxLng;
   }
 
+  // Saves the mission data locally and sends it to the Flask backend
   Future<void> _saveMission() async {
     try {
-      if (_regionCorners.length < 2 || _startPoint == null || _endPoint == null) return;
+      if (_regionCorners.length < 2 || _startPoint == null || _endPoint == null)
+        return;
 
       final mission = {
         'region': {
           'top_left': [_regionCorners[0].latitude, _regionCorners[0].longitude],
-          'bottom_right': [_regionCorners[1].latitude, _regionCorners[1].longitude],
+          'bottom_right': [
+            _regionCorners[1].latitude,
+            _regionCorners[1].longitude
+          ],
         },
         'start': [_startPoint!.latitude, _startPoint!.longitude],
         'end': [_endPoint!.latitude, _endPoint!.longitude],
       };
 
+      // Save mission to local file
       final directory = await getApplicationDocumentsDirectory();
       final file = File('${directory.path}/mission.json');
       await file.writeAsString(jsonEncode(mission));
 
+      // Send mission to backend
       await sendMissionToFlask(mission);
     } catch (e) {
       _hideLoadingDialog();
@@ -138,6 +157,7 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
     }
   }
 
+  // Sends the mission JSON to Flask backend via HTTP POST
   Future<void> sendMissionToFlask(Map<String, dynamic> missionJson) async {
     final url = Uri.parse('http://10.0.2.2:5000/run-mission');
 
@@ -156,6 +176,7 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
         final data = jsonDecode(response.body);
         final missionName = data['mission'] ?? 'unknown';
 
+        // Navigate to mission details screen
         Navigator.of(context).pushReplacementNamed(
           '/mission-details',
           arguments: {'missionName': missionName},
@@ -173,6 +194,7 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
     }
   }
 
+  // Shows a loading dialog while waiting for backend response
   void _showLoadingDialog() {
     showDialog(
       context: context,
@@ -189,10 +211,12 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
     );
   }
 
+  // Hides the loading dialog
   void _hideLoadingDialog() {
     Navigator.of(context, rootNavigator: true).pop();
   }
 
+  // Clears all mission selections and markers
   void _resetMission() {
     setState(() {
       _regionCorners.clear();
@@ -207,11 +231,13 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
     );
   }
 
+  // Searches for a location name and moves the map camera to it
   Future<void> _searchAndNavigate(String placeName) async {
     try {
       List<Location> locations = await locationFromAddress(placeName);
       if (locations.isNotEmpty) {
-        final target = LatLng(locations.first.latitude, locations.first.longitude);
+        final target =
+            LatLng(locations.first.latitude, locations.first.longitude);
         _mapController?.animateCamera(CameraUpdate.newLatLngZoom(target, 16));
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -225,6 +251,7 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
     }
   }
 
+  // Gets the user’s current GPS location and moves the map camera there
   Future<void> _goToCurrentLocation() async {
     try {
       bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -248,7 +275,9 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
 
       if (permission == LocationPermission.deniedForever) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('❌ Permission denied permanently. Please enable it in settings.')),
+          SnackBar(
+              content: Text(
+                  '❌ Permission denied permanently. Please enable it in settings.')),
         );
         return;
       }
@@ -325,7 +354,8 @@ class _HimaMapPickerState extends State<HimaMapPicker> {
 
                     ScaffoldMessenger.of(context).showSnackBar(
                       SnackBar(
-                        content: Text("📍 Tap two corners on the map to define your region."),
+                        content: Text(
+                            "📍 Tap two corners on the map to define your region."),
                         duration: Duration(seconds: 3),
                       ),
                     );

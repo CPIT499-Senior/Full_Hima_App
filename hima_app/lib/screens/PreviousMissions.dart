@@ -12,20 +12,22 @@ class PreviousMissions extends StatefulWidget {
 }
 
 class _PreviousMissionsState extends State<PreviousMissions> {
-  List<dynamic> _missions = [];
-  bool _loading = true;
+  List<dynamic> _missions = []; // List to hold fetched missions
+  bool _loading = true; // Loading state flag
 
   @override
   void initState() {
     super.initState();
-    fetchMissions();
+    fetchMissions(); // Start fetching missions when screen loads
   }
 
+  // Fetches missions from the Flask backend API
   Future<void> fetchMissions() async {
     final url = Uri.parse('http://10.0.2.2:5000/missions');
     try {
       final response = await http.get(url);
       if (response.statusCode == 200) {
+        // Update state with the list of missions
         setState(() {
           _missions = jsonDecode(response.body);
           _loading = false;
@@ -95,7 +97,10 @@ class _PreviousMissionsState extends State<PreviousMissions> {
                   alignment: Alignment.centerLeft,
                   child: Text(
                     'Previous missions:',
-                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Colors.black),
+                    style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black),
                   ),
                 ),
               ),
@@ -103,13 +108,13 @@ class _PreviousMissionsState extends State<PreviousMissions> {
                 child: _loading
                     ? Center(child: CircularProgressIndicator())
                     : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 25),
-                  itemCount: _missions.length,
-                  itemBuilder: (context, index) {
-                    final mission = _missions[index];
-                    return _missionCard(mission, context);
-                  },
-                ),
+                        padding: const EdgeInsets.symmetric(horizontal: 25),
+                        itemCount: _missions.length,
+                        itemBuilder: (context, index) {
+                          final mission = _missions[index];
+                          return _missionCard(mission, context);
+                        },
+                      ),
               ),
             ],
           ),
@@ -118,6 +123,7 @@ class _PreviousMissionsState extends State<PreviousMissions> {
     );
   }
 
+  // Builds a card widget for each mission in the list
   Widget _missionCard(Map mission, BuildContext context) {
     return Card(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
@@ -129,12 +135,14 @@ class _PreviousMissionsState extends State<PreviousMissions> {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
+            // Mission ID and landmine count
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   '${mission['id']}', // fixed
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                  style: const TextStyle(
+                      fontWeight: FontWeight.bold, fontSize: 16),
                 ),
                 Text('Detected landmines: ${mission['landmineCount'] ?? 0}'),
               ],
@@ -150,11 +158,13 @@ class _PreviousMissionsState extends State<PreviousMissions> {
                 Navigator.push(
                   context,
                   MaterialPageRoute(
-                    builder: (context) => MissionDetails(missionName: mission['id']),
+                    builder: (context) =>
+                        MissionDetails(missionName: mission['id']),
                   ),
                 );
               },
-              child: const Text('Show more', style: TextStyle(color: Colors.white)),
+              child: const Text('Show more',
+                  style: TextStyle(color: Colors.white)),
             ),
           ],
         ),

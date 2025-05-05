@@ -6,7 +6,7 @@ import 'screens/MissionDetails.dart';
 import 'package:hima_app/screens/HimaMapPicker.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(const MyApp()); // Launch the main app widget
 }
 
 class MyApp extends StatelessWidget {
@@ -15,17 +15,26 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
+      debugShowCheckedModeBanner: false, // Hide the debug banner
       title: 'Hima App',
-      initialRoute: '/', // Start screen
+      initialRoute: '/', // Define the start (welcome) screen route
       routes: {
+        // Welcome screen (first screen)
         '/': (context) => WelcomeScreen(),
+
+        // Login screen
         '/login': (context) => LoginScreen(),
+
+        // New mission screen (map picker)
         '/new_mission': (context) => HimaMapPicker(),
+
+        // Previous missions screen, receives username as argument
         '/previous_missions': (context) {
           final username = ModalRoute.of(context)!.settings.arguments as String;
           return PreviousMissions(username: username);
         },
+
+        // Mission details screen, receives missionName as argument
         '/mission-details': (context) {
           final args = ModalRoute.of(context)!.settings.arguments as Map;
           return MissionDetails(missionName: args['missionName']);

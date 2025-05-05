@@ -5,7 +5,7 @@ function main(missionName)
         error("❌ No mission name provided. Usage: main('mission1')");
     end
 
-    % ✅ Robust path handling (supports folders with spaces)
+    % Robust path handling 
     thisScriptDir = string(fileparts(mfilename('fullpath')));
     missionFolder = fullfile(thisScriptDir, "..", "hima_app", "missions", missionName);
     inputFile = fullfile(missionFolder, "input.json");
@@ -22,7 +22,7 @@ function main(missionName)
         disp("✅ Input data loaded:");
         disp(inputData);
 
-        % ✅ Auto-generate scan_region.json from input
+        % Auto-generate scan_region.json from input
         if isfield(inputData, "region")
             regionData = inputData.region;
             regionFilePath = fullfile(missionFolder, "scan_region.json");
@@ -38,7 +38,7 @@ function main(missionName)
         error("❌ Failed to decode input.json. Check JSON format.");
     end
 
-    % ✅ Clean setup
+    % Clean setup
     clearvars -except missionName missionFolder thisScriptDir inputData
     addpath(fullfile(thisScriptDir, "functions"));
     addpath(fullfile(thisScriptDir, "scripts"));

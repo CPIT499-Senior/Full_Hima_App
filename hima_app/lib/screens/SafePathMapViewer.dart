@@ -5,7 +5,8 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class SafePathMapViewer extends StatefulWidget {
   final String missionName;
-  const SafePathMapViewer({Key? key, required this.missionName}) : super(key: key);
+  const SafePathMapViewer({Key? key, required this.missionName})
+      : super(key: key);
 
   @override
   State<SafePathMapViewer> createState() => _SafePathMapViewerState();
@@ -13,18 +14,20 @@ class SafePathMapViewer extends StatefulWidget {
 
 class _SafePathMapViewerState extends State<SafePathMapViewer> {
   GoogleMapController? _mapController;
-  Set<Marker> _markers = {};
-  Set<Polyline> _polylines = {};
-  bool _loading = true;
+  Set<Marker> _markers = {}; // Stores map markers (landmines, start, end)
+  Set<Polyline> _polylines = {}; // Stores the safe path line
+  bool _loading = true; // Tracks loading state
 
   @override
   void initState() {
     super.initState();
-    _loadMissionData();
+    _loadMissionData(); // Load mission data when the screen initializes
   }
 
+  // Fetches mission result JSON from the Flask backend and updates the map
   Future<void> _loadMissionData() async {
-    final url = Uri.parse('http://10.0.2.2:5000/missions/${widget.missionName}/result.json');
+    final url = Uri.parse(
+        'http://10.0.2.2:5000/missions/${widget.missionName}/result.json');
     print('🛰️ Trying to load result for mission: ${widget.missionName}');
 
     try {
@@ -37,11 +40,13 @@ class _SafePathMapViewerState extends State<SafePathMapViewer> {
         List<dynamic> path = data['safePath'] ?? [];
         List<dynamic> landmines = data['detectedLandmines'] ?? [];
 
-        List<LatLng> pathPoints = path.map<LatLng>((p) => LatLng(p[0], p[1])).toList();
+        List<LatLng> pathPoints =
+            path.map<LatLng>((p) => LatLng(p[0], p[1])).toList();
 
         setState(() {
           _loading = false;
 
+          // Draw the safe path as a green polyline
           _polylines.add(Polyline(
             polylineId: PolylineId('safe_path'),
             points: pathPoints,
@@ -49,42 +54,58 @@ class _SafePathMapViewerState extends State<SafePathMapViewer> {
             width: 5,
           ));
 
+          // Add red markers for each landmine
           for (int i = 0; i < landmines.length; i++) {
             final latLng = LatLng(landmines[i]['lat'], landmines[i]['lon']);
             _markers.add(Marker(
               markerId: MarkerId('landmine_$i'),
               position: latLng,
-              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueRed),
               infoWindow: InfoWindow(title: '⚠️ Landmine'),
             ));
           }
 
+          // Add blue marker for start and green marker for end of path
           if (pathPoints.isNotEmpty) {
             _markers.add(Marker(
               markerId: const MarkerId('start'),
               position: pathPoints.first,
-              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueBlue),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueBlue),
               infoWindow: const InfoWindow(title: 'Start'),
             ));
             _markers.add(Marker(
               markerId: const MarkerId('end'),
               position: pathPoints.last,
-              icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
+              icon: BitmapDescriptor.defaultMarkerWithHue(
+                  BitmapDescriptor.hueGreen),
               infoWindow: const InfoWindow(title: 'End'),
             ));
 
+            // Calculate map bounds to fit the entire safe path
             final bounds = LatLngBounds(
               southwest: LatLng(
-                pathPoints.map((p) => p.latitude).reduce((a, b) => a < b ? a : b),
-                pathPoints.map((p) => p.longitude).reduce((a, b) => a < b ? a : b),
+                pathPoints
+                    .map((p) => p.latitude)
+                    .reduce((a, b) => a < b ? a : b),
+                pathPoints
+                    .map((p) => p.longitude)
+                    .reduce((a, b) => a < b ? a : b),
               ),
               northeast: LatLng(
-                pathPoints.map((p) => p.latitude).reduce((a, b) => a > b ? a : b),
-                pathPoints.map((p) => p.longitude).reduce((a, b) => a > b ? a : b),
+                pathPoints
+                    .map((p) => p.latitude)
+                    .reduce((a, b) => a > b ? a : b),
+                pathPoints
+                    .map((p) => p.longitude)
+                    .reduce((a, b) => a > b ? a : b),
               ),
             );
 
-            _mapController?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+            // Animate the camera to fit the path within view
+            _mapController
+                ?.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
           }
         });
       } else {
@@ -107,16 +128,16 @@ class _SafePathMapViewerState extends State<SafePathMapViewer> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : GoogleMap(
-        initialCameraPosition: const CameraPosition(
-          target: LatLng(21.558, 39.206),
-          zoom: 14,
-        ),
-        onMapCreated: (controller) => _mapController = controller,
-        markers: _markers,
-        polylines: _polylines,
-        myLocationEnabled: false,
-        zoomControlsEnabled: true,
-      ),
+              initialCameraPosition: const CameraPosition(
+                target: LatLng(21.558, 39.206),
+                zoom: 14,
+              ),
+              onMapCreated: (controller) => _mapController = controller,
+              markers: _markers,
+              polylines: _polylines,
+              myLocationEnabled: false,
+              zoomControlsEnabled: true,
+            ),
     );
   }
 }

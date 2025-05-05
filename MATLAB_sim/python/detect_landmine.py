@@ -32,28 +32,35 @@ def detect_landmines_in_image(image_path, model, topLeftX, topLeftY, utmWidth, u
     return detections
 
 def main_script():
+    # Get mission folder from environment variable
     mission_folder = os.environ.get("HIMA_MISSION_FOLDER")
     if mission_folder is None:
         raise ValueError("❌ HIMA_MISSION_FOLDER environment variable not set!")
 
+    # Load scan region metadata
     scan_region_path = os.path.join(mission_folder, "scan_region.json")
     output_json = os.path.join(mission_folder, "detected_landmines.json")
-
     with open(scan_region_path, 'r') as f:
         region = json.load(f)
 
+    # Convert region corners to UTM
     top_left = region["top_left"]
     bottom_right = region["bottom_right"]
-
     topLeftX, topLeftY, zone, _ = utm.from_latlon(*top_left)
     bottomRightX, bottomRightY, _, _ = utm.from_latlon(*bottom_right)
+
+    # Calculate UTM width and height
     utmWidth = abs(bottomRightX - topLeftX)
     utmHeight = abs(topLeftY - bottomRightY)
 
+    # Load YOLO model
     model_path = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'models', 'best.pt'))
     model = YOLO(model_path)
 
+    # Get image directory
     image_dir = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', 'data', 'frames_for_detection'))
+
+    # Run detection on each image and collect all results
     all_detections = []
     for image_file in os.listdir(image_dir):
         image_path = os.path.join(image_dir, image_file)
@@ -61,7 +68,7 @@ def main_script():
             image_path, model, topLeftX, topLeftY, utmWidth, utmHeight, zone
         )
         all_detections.extend(detections)
-
+    # Save detections to JSON file
     with open(output_json, 'w') as f:
         json.dump(all_detections, f, indent=2)
 
