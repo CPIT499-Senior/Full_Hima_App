@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
 import 'home_screen.dart';
+
 class LoginScreen extends StatefulWidget {
   @override
   _LoginScreenState createState() => _LoginScreenState();
@@ -67,16 +70,28 @@ class _LoginScreenState extends State<LoginScreen> {
 
                   // Login Button
                   ElevatedButton(
-                    onPressed: () {
-                      if (_usernameController.text == 'admin' && _passwordController.text == '1234') {
+                    onPressed: () async {
+                      String jsonString = await rootBundle.loadString('assets/credentials.json');
+                      final credentials = json.decode(jsonString);
+                      final users = credentials['users'] as List;
+
+                      bool isAuthorized = users.any((user) =>
+                      user['username'] == _usernameController.text &&
+                          user['password'] == _passwordController.text
+                      );
+
+                      if (isAuthorized) {
                         Navigator.pushReplacement(
                           context,
                           MaterialPageRoute(
                             builder: (context) => HomeScreen(username: _usernameController.text),
                           ),
                         );
+                      } else {
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Invalid username or password')),
+                        );
                       }
-
                     },
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.brown.shade800,
